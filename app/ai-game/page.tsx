@@ -8,11 +8,15 @@ function GameContent() {
   const { game, info } = useChessGameContext()
   
   const onPieceDrop = ({ sourceSquare, targetSquare }: any) => {
-    // Only allow human to move white pieces
+    // Only allow human to move white pieces during white's turn
     if (info.turn === 'w') {
-      return true // Allow white moves (human)
+      // Check if the piece being moved is white
+      const piece = game.get(sourceSquare)
+      if (piece && piece.color === 'w') {
+        return true // Allow white piece moves
+      }
     }
-    return false // Prevent black moves (AI)
+    return false // Prevent all other moves
   }
   
   return (
