@@ -5,10 +5,12 @@ A modern, interactive chess game built with Next.js 15, React 19, and TypeScript
 ## ✨ Features
 
 - **Interactive Chess Board**: Drag-and-drop piece movement with visual feedback
+- **AI Opponent**: Play against Google Gemini AI with intelligent move generation
+- **Multiple Game Modes**: Human vs Human and Human vs AI
 - **Real-time Game State**: Live turn indicators and game status updates
 - **Move Validation**: Powered by chess.js for accurate rule enforcement
 - **Winner Celebrations**: Animated victory displays with glowing effects
-- **Move History**: Complete game notation tracking
+- **Move History**: Complete game notation tracking with player identification
 - **Dark/Light Theme**: Toggle between themes with system preference support
 - **Responsive Design**: Works seamlessly on desktop and mobile devices
 - **Game Management**: Restart functionality and game over detection
@@ -19,6 +21,7 @@ A modern, interactive chess game built with Next.js 15, React 19, and TypeScript
 - **Frontend**: React 19.1.0, TypeScript 5
 - **Chess Engine**: chess.js 1.4.0 for game logic
 - **Chess UI**: @react-chess-tools/react-chess-game 0.5.1
+- **AI Engine**: Google Generative AI (Gemini) for intelligent moves
 - **Styling**: Tailwind CSS 4 with custom animations
 - **Theme**: next-themes 0.4.6 for dark/light mode
 - **Icons**: Lucide React 0.541.0
@@ -28,6 +31,7 @@ A modern, interactive chess game built with Next.js 15, React 19, and TypeScript
 ### Core Dependencies
 ```json
 {
+  "@google/generative-ai": "^0.24.1",
   "@react-chess-tools/react-chess-game": "^0.5.1",
   "chess.js": "^1.4.0",
   "lucide-react": "^0.541.0",
@@ -78,7 +82,15 @@ pnpm install
 bun install
 ```
 
-3. **Run the development server**
+3. **Set up AI Configuration (Optional)**
+For AI vs Human mode, create a `.env.local` file:
+```bash
+# Google Gemini AI Configuration
+GOOGLE_API_KEY=your_google_gemini_api_key_here
+GOOGLE_AI_MODEL_NAME=gemini-1.5-flash
+```
+
+4. **Run the development server**
 ```bash
 npm run dev
 # or
@@ -89,11 +101,12 @@ pnpm dev
 bun dev
 ```
 
-4. **Open your browser**
+5. **Open your browser**
 Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## 🎮 How to Play
 
+### Human vs Human Mode
 1. **Start a Game**: Click "Start Game" on the home page
 2. **Make Moves**: Drag and drop pieces to make moves
 3. **Turn Indicators**: Green glow shows whose turn it is
@@ -101,13 +114,26 @@ Navigate to [http://localhost:3000](http://localhost:3000)
 5. **Winner Celebration**: Animated victory display when game ends
 6. **New Game**: Click "New Game 🎮" to restart
 
+### Human vs AI Mode
+1. **Challenge AI**: Click "Challenge AI" on the home page
+2. **Play as White**: You control white pieces, AI controls black
+3. **AI Thinking**: Watch AI thinking indicator with animated dots
+4. **Smart Opponent**: AI uses Google Gemini for intelligent moves
+5. **Auto Response**: AI automatically responds after your moves
+6. **New AI Game**: Click "New AI Game 🤖" to restart
+
 ## 📁 Project Structure
 
 ```
 chess-master/
 ├── app/
+│   ├── api/
+│   │   └── ai-move/
+│   │       └── route.ts      # AI move generation API
+│   ├── ai-game/
+│   │   └── page.tsx          # AI vs Human chess game
 │   ├── game/
-│   │   └── page.tsx          # Main chess game component
+│   │   └── page.tsx          # Human vs Human chess game
 │   ├── globals.css           # Global styles
 │   ├── layout.tsx            # Root layout with theme provider
 │   └── page.tsx              # Home page with game modes
@@ -115,6 +141,9 @@ chess-master/
 │   ├── navbar.tsx            # Navigation bar
 │   ├── theme-provider.tsx    # Theme context provider
 │   └── theme-toggle.tsx      # Dark/light mode toggle
+├── utils/
+│   └── aiMoves.ts            # AI move utility functions
+├── .env.local                # Environment variables (API keys)
 ├── public/                   # Static assets
 └── package.json              # Dependencies and scripts
 ```

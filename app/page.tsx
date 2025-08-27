@@ -29,7 +29,7 @@ export default function Home() {
           </div>
 
           {/* AI vs Human */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700 opacity-60">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer border border-gray-200 dark:border-gray-700">
             <div className="text-center">
               <div className="text-4xl mb-4">🧠</div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
@@ -38,9 +38,9 @@ export default function Home() {
               <p className="text-gray-600 dark:text-gray-300 mb-4">
                 Challenge our AI opponent
               </p>
-              <button className="w-full bg-gray-400 text-white font-medium py-2 px-4 rounded-md cursor-not-allowed">
-                Coming Soon
-              </button>
+              <a href="/ai-game" className="block w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors text-center">
+                Challenge AI
+              </a>
             </div>
           </div>
 
