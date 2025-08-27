@@ -7,7 +7,7 @@ import { getAIMove } from "@/utils/aiMoves"
 function GameContent() {
   const { game, info } = useChessGameContext()
   
-  const onMove = (move: any) => {
+  const onPieceDrop = ({ sourceSquare, targetSquare }: any) => {
     // Only allow human to move white pieces
     if (info.turn === 'w') {
       return true // Allow white moves (human)
@@ -16,7 +16,11 @@ function GameContent() {
   }
   
   return (
-    <ChessGame.Board onMove={onMove} />
+    <ChessGame.Board 
+      options={{
+        onPieceDrop
+      }}
+    />
   )
 }
 
@@ -24,7 +28,6 @@ function AIGameLayout() {
   const { info, game, methods } = useChessGameContext()
   const [isAIThinking, setIsAIThinking] = useState(false)
   const [lastMoveCount, setLastMoveCount] = useState(0)
-  const [forceUpdate, setForceUpdate] = useState(0)
   
   const humanWon = info.isCheckmate && info.turn === 'b' // Human is white, AI is black
   const aiWon = info.isCheckmate && info.turn === 'w'
@@ -41,15 +44,14 @@ function AIGameLayout() {
         try {
           const fen = game.fen()
           const moveHistory = game.history()
-          let aiMove = await getAIMove(fen, moveHistory)
+          const possibleMoves = game.moves()
+          let aiMove = await getAIMove(fen, moveHistory, possibleMoves)
           console.log('Raw AI response:', aiMove, typeof aiMove)
           
           // Add delay for better UX
           setTimeout(() => {
             try {
               if (aiMove) {
-                // Get all possible moves
-                const possibleMoves = game.moves()
                 console.log('AI suggested:', aiMove, 'Legal moves:', possibleMoves)
                 
                 // Check if AI move is in legal moves

@@ -1,4 +1,4 @@
-export async function getAIMove(fen: string, moveHistory: string[]): Promise<string | null> {
+export async function getAIMove(fen: string, moveHistory: string[], legalMoves: string[]): Promise<string | null> {
   try {
     const response = await fetch('/api/ai-move', {
       method: 'POST',
@@ -7,7 +7,8 @@ export async function getAIMove(fen: string, moveHistory: string[]): Promise<str
       },
       body: JSON.stringify({
         fen,
-        moveHistory
+        moveHistory,
+        legalMoves
       })
     })
     
