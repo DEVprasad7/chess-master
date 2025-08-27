@@ -7,11 +7,7 @@ function GameContent() {
   const { game, info } = useChessGameContext()
   
   return (
-    <ChessGame.Board 
-      options={{
-        boardWidth: 400
-      }}
-    />
+    <ChessGame.Board />
   )
 }
 
