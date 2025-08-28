@@ -15,7 +15,7 @@ class LocalChessEngine {
       for (let j = 0; j < 8; j++) {
         const piece = board[i][j]
         if (piece) {
-          const value = this.pieceValues[piece.type] || 0
+          const value = this.pieceValues[piece.type as keyof typeof this.pieceValues] || 0
           score += piece.color === 'w' ? -value : value
           
           // Simple positional bonus
