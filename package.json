@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@chrisoakman/chessboardjs": "^1.0.0",
+    "@clerk/nextjs": "^6.31.6",
     "@google/generative-ai": "^0.24.1",
     "@react-chess-tools/react-chess-game": "^0.5.1",
     "chess.js": "^1.4.0",
