@@ -42,7 +42,7 @@ function AIGameLayout() {
   const { info, game, methods } = useChessGameContext()
   const [isAIThinking, setIsAIThinking] = useState(false)
   const [lastMoveCount, setLastMoveCount] = useState(0)
-  const [aiMode, setAiMode] = useState<string | null>(null)
+
   
   const humanWon = info.isCheckmate && info.turn === 'b' // Human is white, AI is black
   const aiWon = info.isCheckmate && info.turn === 'w'
