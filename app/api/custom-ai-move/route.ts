@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
-    const { fen, moveHistory, legalMoves, config } = await request.json()
+    const { fen, legalMoves, config } = await request.json()
     
     const genAI = new GoogleGenerativeAI(config.apiKey)
     const model = genAI.getGenerativeModel({ model: config.modelName })

@@ -4,8 +4,6 @@ import { useState, useEffect } from "react"
 import { ChessGame, useChessGameContext } from "@react-chess-tools/react-chess-game"
 
 function GameContent() {
-  const { game, info } = useChessGameContext()
-  
   return (
     <ChessGame.Board />
   )

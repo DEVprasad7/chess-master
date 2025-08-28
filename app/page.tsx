@@ -15,7 +15,7 @@ export default function Home() {
     window.location.href = '/ai-game'
   }
 
-  const handleCustomAISelect = (config: any) => {
+  const handleCustomAISelect = (config: {apiKey: string, modelName: string}) => {
     localStorage.setItem('aiMode', 'custom')
     localStorage.setItem('aiConfig', JSON.stringify(config))
     window.location.href = '/ai-game'
