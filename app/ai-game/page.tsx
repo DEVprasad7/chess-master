@@ -7,7 +7,7 @@ import { HybridAI } from "@/utils/hybridAI"
 const hybridAI = new HybridAI()
 
 function GameContent({ isAIThinking }: { isAIThinking: boolean }) {
-  const { game, info } = useChessGameContext()
+  const { info } = useChessGameContext()
   
   const isDisabled = info.turn === 'b' || isAIThinking || info.isGameOver
   
@@ -43,7 +43,7 @@ function AIGameLayout() {
           const fen = game.fen()
           const moveHistory = game.history()
           const possibleMoves = game.moves()
-          let aiMove = await hybridAI.getBestMove(fen, moveHistory, possibleMoves, game)
+          const aiMove = await hybridAI.getBestMove(fen, moveHistory, possibleMoves, game)
           console.log('AI response:', aiMove, typeof aiMove)
           
           // Add delay for better UX
