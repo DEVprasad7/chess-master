@@ -1,5 +1,5 @@
 import { ThemeToggle } from "./theme-toggle"
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+// import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 
 export function Navbar() {
   return (
@@ -19,19 +19,10 @@ export function Navbar() {
           <div className="flex items-center gap-4">
             <ThemeToggle />
 
-            {/* If user is signed in, show UserButton */}
-            <SignedIn>
-              <UserButton afterSignOutUrl="/" />
-            </SignedIn>
-
-            {/* If user is signed out, show Sign In / Sign Up buttons */}
-            <SignedOut>
-              <SignInButton mode="modal">
-                <button className="px-3 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700">
-                  Sign Up
-                </button>
-              </SignInButton>
-            </SignedOut>
+            {/* Authentication temporarily disabled */}
+            <button className="px-3 py-1 rounded-md bg-blue-600 text-white hover:bg-blue-700">
+              Sign In
+            </button>
           </div>
         </div>
       </div>
