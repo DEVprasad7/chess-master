@@ -2,27 +2,37 @@
 
 import { useState, useEffect } from "react"
 import { ChessGame, useChessGameContext } from "@react-chess-tools/react-chess-game"
-import { getAIMove } from "@/utils/aiMoves"
+import { HybridAI } from "@/utils/hybridAI"
+
+const hybridAI = new HybridAI()
 
 function GameContent() {
-  const { game, info } = useChessGameContext()
+  const { game, info, methods } = useChessGameContext()
   
   const onPieceDrop = ({ sourceSquare, targetSquare }: any) => {
     // Only allow human to move white pieces during white's turn
-    if (info.turn === 'w') {
-      // Check if the piece being moved is white
+    if (info.turn === 'w' && !info.isGameOver) {
       const piece = game.get(sourceSquare)
       if (piece && piece.color === 'w') {
-        return true // Allow white piece moves
+        // Use the same smooth method as AI
+        const move = sourceSquare + targetSquare
+        const possibleMoves = game.moves()
+        
+        // Check if move is legal
+        if (possibleMoves.includes(move)) {
+          methods.makeMove(move)
+          return true
+        }
       }
     }
-    return false // Prevent all other moves
+    return false
   }
   
   return (
     <ChessGame.Board 
       options={{
-        onPieceDrop
+        onPieceDrop,
+        animationDurationInMs: 400
       }}
     />
   )
@@ -32,6 +42,7 @@ function AIGameLayout() {
   const { info, game, methods } = useChessGameContext()
   const [isAIThinking, setIsAIThinking] = useState(false)
   const [lastMoveCount, setLastMoveCount] = useState(0)
+  const [aiMode, setAiMode] = useState<string | null>(null)
   
   const humanWon = info.isCheckmate && info.turn === 'b' // Human is white, AI is black
   const aiWon = info.isCheckmate && info.turn === 'w'
@@ -49,59 +60,60 @@ function AIGameLayout() {
           const fen = game.fen()
           const moveHistory = game.history()
           const possibleMoves = game.moves()
-          let aiMove = await getAIMove(fen, moveHistory, possibleMoves)
-          console.log('Raw AI response:', aiMove, typeof aiMove)
+          let aiMove = await hybridAI.getBestMove(fen, moveHistory, possibleMoves, game)
+          console.log('AI response:', aiMove, typeof aiMove)
           
           // Add delay for better UX
           setTimeout(() => {
             try {
-              if (aiMove) {
-                console.log('AI suggested:', aiMove, 'Legal moves:', possibleMoves)
-                
-                // Check if AI move is in legal moves
-                if (possibleMoves.includes(aiMove.trim())) {
-                  try {
-                    const result = methods.makeMove(aiMove.trim())
-                    console.log('AI move executed:', result)
-                  } catch (moveError) {
-                    console.error('Move execution failed:', moveError)
-                    throw moveError
-                  }
-                } else {
-                  throw new Error('AI move not in legal moves')
-                }
+              if (aiMove && possibleMoves.includes(aiMove.trim())) {
+                const result = methods.makeMove(aiMove.trim())
+                console.log('AI move executed:', result)
               } else {
+                console.warn(`AI move "${aiMove}" not valid, using random move`)
                 // Fallback: make a random legal move
-                const possibleMoves = game.moves()
-                if (possibleMoves.length > 0) {
-                  const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)]
-                  game.move(randomMove)
-                }
+                const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)]
+                methods.makeMove(randomMove)
+                console.log('Used random fallback move:', randomMove)
               }
             } catch (error) {
-              console.error('Invalid AI move:', aiMove, error)
-              // Fallback: make a random legal move
+              console.error('Move execution failed:', error)
+              // Final fallback
               try {
                 const possibleMoves = game.moves()
                 if (possibleMoves.length > 0) {
                   const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)]
-                  game.move(randomMove)
+                  methods.makeMove(randomMove)
+                  console.log('Used emergency fallback move:', randomMove)
                 }
               } catch (fallbackError) {
-                console.error('Fallback move failed:', fallbackError)
+                console.error('All fallbacks failed:', fallbackError)
               }
             }
             setIsAIThinking(false)
           }, 1500)
         } catch (error) {
-          console.error('AI move error:', error)
-          setIsAIThinking(false)
+          console.error('AI API error:', error)
+          // Immediate fallback for API errors
+          setTimeout(() => {
+            try {
+              const possibleMoves = game.moves()
+              if (possibleMoves.length > 0) {
+                const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)]
+                methods.makeMove(randomMove)
+                console.log('Used fallback move:', randomMove)
+              }
+            } catch (fallbackError) {
+              console.error('Fallback failed:', fallbackError)
+            }
+            setIsAIThinking(false)
+          }, 1500)
         }
       }
     }
     
     makeAIMove()
-  }, [info.turn, info.isGameOver, game, isAIThinking, lastMoveCount])
+  }, [info.turn, info.isGameOver, game, methods, isAIThinking, lastMoveCount])
   
   return (
     <>
@@ -257,6 +269,15 @@ export default function AIGamePage() {
 
   useEffect(() => {
     setMounted(true)
+    
+    // Initialize AI mode
+    const mode = localStorage.getItem('aiMode')
+    if (mode === 'stockfish') {
+      hybridAI.setStockfishMode()
+    } else if (mode === 'custom') {
+      const config = JSON.parse(localStorage.getItem('aiConfig') || '{}')
+      hybridAI.setCustomAIMode(config)
+    }
   }, [])
 
   return (

@@ -1,4 +1,26 @@
+"use client"
+
+import { useState } from "react"
+import { AISelectionModal } from "@/components/ai-selection-modal"
+
 export default function Home() {
+  const [showAIModal, setShowAIModal] = useState(false)
+
+  const handleAIGameClick = () => {
+    setShowAIModal(true)
+  }
+
+  const handleStockfishSelect = () => {
+    localStorage.setItem('aiMode', 'stockfish')
+    window.location.href = '/ai-game'
+  }
+
+  const handleCustomAISelect = (config: any) => {
+    localStorage.setItem('aiMode', 'custom')
+    localStorage.setItem('aiConfig', JSON.stringify(config))
+    window.location.href = '/ai-game'
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="container mx-auto px-4 py-8">
@@ -38,9 +60,12 @@ export default function Home() {
               <p className="text-gray-600 dark:text-gray-300 mb-4">
                 Challenge our AI opponent
               </p>
-              <a href="/ai-game" className="block w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors text-center">
+              <button 
+                onClick={handleAIGameClick}
+                className="block w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors text-center"
+              >
                 Challenge AI
-              </a>
+              </button>
             </div>
           </div>
 
@@ -60,6 +85,13 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      <AISelectionModal
+        isOpen={showAIModal}
+        onClose={() => setShowAIModal(false)}
+        onSelectStockfish={handleStockfishSelect}
+        onSelectCustomAI={handleCustomAISelect}
+      />
     </div>
   );
 }
