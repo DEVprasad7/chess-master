@@ -6,35 +6,18 @@ import { HybridAI } from "@/utils/hybridAI"
 
 const hybridAI = new HybridAI()
 
-function GameContent() {
-  const { game, info, methods } = useChessGameContext()
+function GameContent({ isAIThinking }: { isAIThinking: boolean }) {
+  const { game, info } = useChessGameContext()
   
-  const onPieceDrop = ({ sourceSquare, targetSquare }: any) => {
-    // Only allow human to move white pieces during white's turn
-    if (info.turn === 'w' && !info.isGameOver) {
-      const piece = game.get(sourceSquare)
-      if (piece && piece.color === 'w') {
-        // Use the same smooth method as AI
-        const move = sourceSquare + targetSquare
-        const possibleMoves = game.moves()
-        
-        // Check if move is legal
-        if (possibleMoves.includes(move)) {
-          methods.makeMove(move)
-          return true
-        }
-      }
-    }
-    return false
-  }
+  const isDisabled = info.turn === 'b' || isAIThinking || info.isGameOver
   
   return (
-    <ChessGame.Board 
-      options={{
-        onPieceDrop,
-        animationDurationInMs: 400
-      }}
-    />
+    <div className="relative">
+      <ChessGame.Board />
+      {isDisabled && (
+        <div className="absolute inset-0 bg-black/20 cursor-not-allowed z-10" />
+      )}
+    </div>
   )
 }
 
@@ -151,7 +134,7 @@ function AIGameLayout() {
 
         {/* Chess Game (Middle) */}
         <div className="w-[400px] h-[400px] flex-shrink-0">
-          <GameContent />
+          <GameContent isAIThinking={isAIThinking} />
         </div>
 
         {/* AI Player (Right) */}
