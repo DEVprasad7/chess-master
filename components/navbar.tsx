@@ -31,11 +31,6 @@ export function Navbar() {
                   Sign In
                 </button>
               </SignInButton>
-              <SignUpButton mode="modal">
-                <button className="px-3 py-1 rounded-md border border-gray-300 dark:border-gray-600 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800">
-                  Sign Up
-                </button>
-              </SignUpButton>
             </SignedOut>
           </div>
         </div>
