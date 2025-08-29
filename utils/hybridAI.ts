@@ -81,6 +81,15 @@ class LocalChessEngine {
     // Game state bonuses
     if (game.isCheckmate()) {
       score += game.turn() === 'w' ? 100000 : -100000
+    } else if (game.isStalemate() || game.isDraw()) {
+      // Stalemate/Draw evaluation based on material
+      const materialBalance = this.getMaterialBalance(board)
+      if (materialBalance > 300) {
+        score -= 50000 // Losing when ahead - bad stalemate
+      } else if (materialBalance < -300) {
+        score += 50000 // Drawing when behind - good stalemate
+      }
+      // Otherwise neutral (0)
     } else if (game.isCheck()) {
       score += game.turn() === 'w' ? -50 : 50
     }
@@ -108,6 +117,20 @@ class LocalChessEngine {
       }
     }
     return pieceCount <= 6
+  }
+  
+  private getMaterialBalance(board: any[][]): number {
+    let balance = 0
+    for (let i = 0; i < 8; i++) {
+      for (let j = 0; j < 8; j++) {
+        const piece = board[i][j]
+        if (piece) {
+          const value = this.pieceValues[piece.type as keyof typeof this.pieceValues] || 0
+          balance += piece.color === 'b' ? value : -value
+        }
+      }
+    }
+    return balance
   }
   
   private evaluateKingSafety(board: any[][]): number {
@@ -328,7 +351,7 @@ class LocalChessEngine {
     let bestScore = -Infinity
     
     // Adaptive depth for balance of speed and strength
-    const depth = moves.length > 35 ? 1 : 2 // Max depth 2
+    const depth = moves.length > 35 ? 1 : 3 // Max depth 2
     this.killerMoves.clear()
     
     for (const move of orderedMoves) {
