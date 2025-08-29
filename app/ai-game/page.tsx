@@ -1,26 +1,16 @@
 "use client"
 
-import { useState, useEffect, memo } from "react"
+import { useState, useEffect } from "react"
 import { ChessGame, useChessGameContext } from "@react-chess-tools/react-chess-game"
 import { HybridAI } from "@/utils/hybridAI"
 
 const hybridAI = new HybridAI()
 
-const GameContent = memo(function GameContent({ isAIThinking }: { isAIThinking: boolean }) {
-  const { info } = useChessGameContext()
-  
-  const isDisabled = info.turn === 'b' || isAIThinking || info.isGameOver
-  
+function GameContent() {
   return (
-    <div className={`transition-all duration-200 ${
-      isDisabled 
-        ? 'opacity-60 pointer-events-none' 
-        : 'opacity-100 pointer-events-auto'
-    }`}>
-      <ChessGame.Board />
-    </div>
+    <ChessGame.Board />
   )
-})
+}
 
 function AIGameLayout() {
   const { info, game, methods } = useChessGameContext()
@@ -30,59 +20,30 @@ function AIGameLayout() {
   const humanWon = info.isCheckmate && info.turn === 'b' // Human is white, AI is black
   const aiWon = info.isCheckmate && info.turn === 'w'
   
-  // Optimized AI move logic
+  // Simplified AI move logic
   useEffect(() => {
     if (info.turn !== 'b' || info.isGameOver || isAIThinking) return
     
     const makeAIMove = async () => {
       setIsAIThinking(true)
       
-      try {
-        const possibleMoves = game.moves()
-        if (possibleMoves.length === 0) {
-          setIsAIThinking(false)
-          return
-        }
-        
-        // Get AI move with shorter timeout
-        const aiMove = await Promise.race([
-          hybridAI.getBestMove(game.fen(), game.history(), possibleMoves, game),
-          new Promise(resolve => setTimeout(() => resolve(null), 3000)) // 3s timeout
-        ])
-        
-        // Quick move validation and execution
-        const moveToPlay = (aiMove && typeof aiMove === 'string' && possibleMoves.includes(aiMove.trim())) 
-          ? (aiMove as string).trim() 
-          : possibleMoves[Math.floor(Math.random() * possibleMoves.length)]
-        
-        // Reduced delay for better responsiveness
-        setTimeout(() => {
-          try {
-            methods.makeMove(moveToPlay)
-          } catch (error) {
-            console.error('Move failed:', error)
-            // Single fallback
-            const fallbackMove = possibleMoves[0]
-            methods.makeMove(fallbackMove)
-          }
-          setIsAIThinking(false)
-        }, 800) // Reduced from 1500ms to 800ms
-        
-      } catch (error) {
-        console.error('AI error:', error)
-        // Quick fallback
-        setTimeout(() => {
-          const possibleMoves = game.moves()
-          if (possibleMoves.length > 0) {
-            methods.makeMove(possibleMoves[0])
-          }
-          setIsAIThinking(false)
-        }, 500)
+      const possibleMoves = game.moves()
+      if (possibleMoves.length === 0) {
+        setIsAIThinking(false)
+        return
       }
+      
+      // Simple random move for now to test performance
+      const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)]
+      
+      setTimeout(() => {
+        methods.makeMove(randomMove)
+        setIsAIThinking(false)
+      }, 500)
     }
     
     makeAIMove()
-  }, [info.turn, info.isGameOver, game, methods, isAIThinking])
+  }, [info.turn, info.isGameOver])
   
   return (
     <>
@@ -120,7 +81,7 @@ function AIGameLayout() {
 
         {/* Chess Game (Middle) */}
         <div className="w-[400px] h-[400px] flex-shrink-0">
-          <GameContent isAIThinking={isAIThinking} />
+          <GameContent />
         </div>
 
         {/* AI Player (Right) */}
