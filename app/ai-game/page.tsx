@@ -51,7 +51,7 @@ function AIGameLayout() {
         ])
         
         // Quick move validation and execution
-        const moveToPlay = (aiMove && possibleMoves.includes(aiMove.trim())) 
+        const moveToPlay = (aiMove && typeof aiMove === 'string' && possibleMoves.includes(aiMove.trim())) 
           ? aiMove.trim() 
           : possibleMoves[Math.floor(Math.random() * possibleMoves.length)]
         
