@@ -52,7 +52,7 @@ function AIGameLayout() {
         
         // Quick move validation and execution
         const moveToPlay = (aiMove && typeof aiMove === 'string' && possibleMoves.includes(aiMove.trim())) 
-          ? aiMove.trim() 
+          ? (aiMove as string).trim() 
           : possibleMoves[Math.floor(Math.random() * possibleMoves.length)]
         
         // Reduced delay for better responsiveness
@@ -82,7 +82,7 @@ function AIGameLayout() {
     }
     
     makeAIMove()
-  }, [info.turn, info.isGameOver]) // Simplified dependencies
+  }, [info.turn, info.isGameOver, game, methods, isAIThinking])
   
   return (
     <>
