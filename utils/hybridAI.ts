@@ -9,6 +9,7 @@ class LocalChessEngine {
   private positionCache = new Map<string, number>()
   private killerMoves = new Map<number, string[]>()
   private historyTable = new Map<string, number>()
+  private transpositionTable = new Map<string, {score: number, depth: number, flag: string}>()
   
   // Piece-square tables for positional evaluation
   private pawnTable = [
@@ -142,8 +143,26 @@ class LocalChessEngine {
   }
   
   private minimax(game: any, depth: number, alpha: number, beta: number, maximizing: boolean, ply: number = 0): number {
+    const fen = game.fen().split(' ')[0]
+    const ttEntry = this.transpositionTable.get(fen)
+    
+    // Transposition table lookup
+    if (ttEntry && ttEntry.depth >= depth) {
+      if (ttEntry.flag === 'exact') return ttEntry.score
+      if (ttEntry.flag === 'lowerbound' && ttEntry.score >= beta) return ttEntry.score
+      if (ttEntry.flag === 'upperbound' && ttEntry.score <= alpha) return ttEntry.score
+    }
+    
     if (depth === 0 || game.isGameOver()) {
-      return this.quiescenceSearch(game, alpha, beta, maximizing, 3) // Quiescence search
+      return this.quiescenceSearch(game, alpha, beta, maximizing, 3)
+    }
+    
+    // Light null move pruning (only depth 2+)
+    if (depth >= 2 && !game.isCheck() && ply > 0) {
+      const nullScore = -this.minimax(game, depth - 2, -beta, -beta + 1, !maximizing, ply + 1)
+      if (nullScore >= beta) {
+        return nullScore
+      }
     }
     
     const moves = this.orderMoves(game, game.moves(), ply)
@@ -151,9 +170,21 @@ class LocalChessEngine {
     
     if (maximizing) {
       let maxEval = -Infinity
-      for (const move of moves) {
+      for (let i = 0; i < moves.length; i++) {
+        const move = moves[i]
         game.move(move)
-        const evaluation = this.minimax(game, depth - 1, alpha, beta, false, ply + 1)
+        
+        let evaluation
+        // Light LMR - only for non-critical moves
+        if (i >= 3 && depth >= 2 && !move.includes('x') && !game.isCheck()) {
+          evaluation = this.minimax(game, depth - 2, alpha, beta, false, ply + 1)
+          if (evaluation > alpha) {
+            evaluation = this.minimax(game, depth - 1, alpha, beta, false, ply + 1)
+          }
+        } else {
+          evaluation = this.minimax(game, depth - 1, alpha, beta, false, ply + 1)
+        }
+        
         game.undo()
         
         if (evaluation > maxEval) {
@@ -168,12 +199,28 @@ class LocalChessEngine {
           break
         }
       }
+      
+      // Store in transposition table
+      const flag = maxEval <= alpha ? 'upperbound' : maxEval >= beta ? 'lowerbound' : 'exact'
+      this.transpositionTable.set(fen, {score: maxEval, depth, flag})
+      
       return maxEval
     } else {
       let minEval = Infinity
-      for (const move of moves) {
+      for (let i = 0; i < moves.length; i++) {
+        const move = moves[i]
         game.move(move)
-        const evaluation = this.minimax(game, depth - 1, alpha, beta, true, ply + 1)
+        
+        let evaluation
+        if (i >= 3 && depth >= 2 && !move.includes('x') && !game.isCheck()) {
+          evaluation = this.minimax(game, depth - 2, alpha, beta, true, ply + 1)
+          if (evaluation < beta) {
+            evaluation = this.minimax(game, depth - 1, alpha, beta, true, ply + 1)
+          }
+        } else {
+          evaluation = this.minimax(game, depth - 1, alpha, beta, true, ply + 1)
+        }
+        
         game.undo()
         
         if (evaluation < minEval) {
@@ -188,6 +235,11 @@ class LocalChessEngine {
           break
         }
       }
+      
+      // Store in transposition table
+      const flag = minEval >= beta ? 'lowerbound' : minEval <= alpha ? 'upperbound' : 'exact'
+      this.transpositionTable.set(fen, {score: minEval, depth, flag})
+      
       return minEval
     }
   }
@@ -205,10 +257,10 @@ class LocalChessEngine {
       beta = Math.min(beta, standPat)
     }
     
-    // Only search captures and checks
-    const captures = game.moves().filter((move: string) => move.includes('x') || this.givesCheck(game, move))
+    // Only search best 3 captures for speed
+    const captures = game.moves().filter((move: string) => move.includes('x')).slice(0, 3)
     
-    for (const move of captures.slice(0, 5)) { // Limit to 5 best captures
+    for (const move of captures) {
       game.move(move)
       const score = this.quiescenceSearch(game, alpha, beta, !maximizing, depth - 1)
       game.undo()
@@ -270,15 +322,13 @@ class LocalChessEngine {
     }
     
     // Move ordering for better alpha-beta pruning
-    const orderedMoves = this.orderMoves(game, moves)
+    let orderedMoves = this.orderMoves(game, moves)
     
     let bestMove = orderedMoves[0]
     let bestScore = -Infinity
     
-    // Adaptive depth based on position complexity
-    const depth = moves.length > 30 ? 1 : 2
-    
-    // Clear killer moves for new search
+    // Adaptive depth for balance of speed and strength
+    const depth = moves.length > 35 ? 1 : 2 // Max depth 2
     this.killerMoves.clear()
     
     for (const move of orderedMoves) {
@@ -298,6 +348,9 @@ class LocalChessEngine {
     }
     if (this.historyTable.size > 10000) {
       this.historyTable.clear()
+    }
+    if (this.transpositionTable.size > 5000) {
+      this.transpositionTable.clear()
     }
     
     return bestMove
@@ -354,11 +407,10 @@ class LocalChessEngine {
       // History heuristic
       score += this.historyTable.get(move) || 0
       
-      // Tactical patterns
+      // Light tactical bonuses
       game.move(move)
       if (game.isCheck()) score += 500
-      if (this.createsFork(game)) score += 300
-      if (this.createsPin(game)) score += 200
+      if (this.createsFork(game)) score += 200 // Simplified fork detection
       game.undo()
       
       // Positional bonuses
@@ -386,13 +438,9 @@ class LocalChessEngine {
   }
   
   private createsFork(game: any): boolean {
-    const moves = game.moves()
-    let attacks = 0
-    for (const move of moves.slice(0, 5)) { // Check first 5 moves only
-      if (move.includes('x')) attacks++
-      if (attacks >= 2) return true
-    }
-    return false
+    // Super fast fork detection - just count available captures
+    const captures = game.moves().filter((m: string) => m.includes('x'))
+    return captures.length >= 2
   }
   
   private createsPin(game: any): boolean {
