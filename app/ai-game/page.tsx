@@ -1,102 +1,88 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, memo } from "react"
 import { ChessGame, useChessGameContext } from "@react-chess-tools/react-chess-game"
 import { HybridAI } from "@/utils/hybridAI"
 
 const hybridAI = new HybridAI()
 
-function GameContent({ isAIThinking }: { isAIThinking: boolean }) {
+const GameContent = memo(function GameContent({ isAIThinking }: { isAIThinking: boolean }) {
   const { info } = useChessGameContext()
   
   const isDisabled = info.turn === 'b' || isAIThinking || info.isGameOver
   
   return (
-    <div className="relative">
+    <div className={`transition-all duration-200 ${
+      isDisabled 
+        ? 'opacity-60 pointer-events-none' 
+        : 'opacity-100 pointer-events-auto'
+    }`}>
       <ChessGame.Board />
-      {isDisabled && (
-        <div className="absolute inset-0 bg-black/20 cursor-not-allowed z-10" />
-      )}
     </div>
   )
-}
+})
 
 function AIGameLayout() {
   const { info, game, methods } = useChessGameContext()
   const [isAIThinking, setIsAIThinking] = useState(false)
-  const [lastMoveCount, setLastMoveCount] = useState(0)
 
   
   const humanWon = info.isCheckmate && info.turn === 'b' // Human is white, AI is black
   const aiWon = info.isCheckmate && info.turn === 'w'
   
-  // AI move logic - only trigger when it's AI's turn and move count changed
+  // Optimized AI move logic
   useEffect(() => {
-    const currentMoveCount = game.history().length
+    if (info.turn !== 'b' || info.isGameOver || isAIThinking) return
     
     const makeAIMove = async () => {
-      if (info.turn === 'b' && !info.isGameOver && !isAIThinking && currentMoveCount !== lastMoveCount) {
-        setIsAIThinking(true)
-        setLastMoveCount(currentMoveCount + 1) // Set to expected count after AI move
-        
-        try {
-          const fen = game.fen()
-          const moveHistory = game.history()
-          const possibleMoves = game.moves()
-          const aiMove = await hybridAI.getBestMove(fen, moveHistory, possibleMoves, game)
-          console.log('AI response:', aiMove, typeof aiMove)
-          
-          // Add delay for better UX
-          setTimeout(() => {
-            try {
-              if (aiMove && possibleMoves.includes(aiMove.trim())) {
-                const result = methods.makeMove(aiMove.trim())
-                console.log('AI move executed:', result)
-              } else {
-                console.warn(`AI move "${aiMove}" not valid, using random move`)
-                // Fallback: make a random legal move
-                const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)]
-                methods.makeMove(randomMove)
-                console.log('Used random fallback move:', randomMove)
-              }
-            } catch (error) {
-              console.error('Move execution failed:', error)
-              // Final fallback
-              try {
-                const possibleMoves = game.moves()
-                if (possibleMoves.length > 0) {
-                  const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)]
-                  methods.makeMove(randomMove)
-                  console.log('Used emergency fallback move:', randomMove)
-                }
-              } catch (fallbackError) {
-                console.error('All fallbacks failed:', fallbackError)
-              }
-            }
-            setIsAIThinking(false)
-          }, 1500)
-        } catch (error) {
-          console.error('AI API error:', error)
-          // Immediate fallback for API errors
-          setTimeout(() => {
-            try {
-              const possibleMoves = game.moves()
-              if (possibleMoves.length > 0) {
-                const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)]
-                methods.makeMove(randomMove)
-                console.log('Used fallback move:', randomMove)
-              }
-            } catch (fallbackError) {
-              console.error('Fallback failed:', fallbackError)
-            }
-            setIsAIThinking(false)
-          }, 1500)
+      setIsAIThinking(true)
+      
+      try {
+        const possibleMoves = game.moves()
+        if (possibleMoves.length === 0) {
+          setIsAIThinking(false)
+          return
         }
+        
+        // Get AI move with shorter timeout
+        const aiMove = await Promise.race([
+          hybridAI.getBestMove(game.fen(), game.history(), possibleMoves, game),
+          new Promise(resolve => setTimeout(() => resolve(null), 3000)) // 3s timeout
+        ])
+        
+        // Quick move validation and execution
+        const moveToPlay = (aiMove && possibleMoves.includes(aiMove.trim())) 
+          ? aiMove.trim() 
+          : possibleMoves[Math.floor(Math.random() * possibleMoves.length)]
+        
+        // Reduced delay for better responsiveness
+        setTimeout(() => {
+          try {
+            methods.makeMove(moveToPlay)
+          } catch (error) {
+            console.error('Move failed:', error)
+            // Single fallback
+            const fallbackMove = possibleMoves[0]
+            methods.makeMove(fallbackMove)
+          }
+          setIsAIThinking(false)
+        }, 800) // Reduced from 1500ms to 800ms
+        
+      } catch (error) {
+        console.error('AI error:', error)
+        // Quick fallback
+        setTimeout(() => {
+          const possibleMoves = game.moves()
+          if (possibleMoves.length > 0) {
+            methods.makeMove(possibleMoves[0])
+          }
+          setIsAIThinking(false)
+        }, 500)
       }
     }
     
     makeAIMove()
-  }, [info.turn, info.isGameOver, game, methods, isAIThinking, lastMoveCount])
+  }, [info.turn, info.isGameOver]) // Simplified dependencies
   
   return (
     <>
