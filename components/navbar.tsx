@@ -1,4 +1,4 @@
-import { ThemeToggle } from "./theme-toggle"
+import { ThemeToggle } from "./theme-toggle";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 
 export function Navbar() {
@@ -34,5 +34,5 @@ export function Navbar() {
         </div>
       </div>
     </nav>
-  )
+  );
 }

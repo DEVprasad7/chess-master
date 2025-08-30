@@ -1,32 +1,44 @@
 interface PlayerCardProps {
-  player: string
-  pieces: string
-  icon: string
-  isActive: boolean
-  hasWon: boolean
-  isGameOver: boolean
+  player: string;
+  pieces: string;
+  icon: string;
+  isActive: boolean;
+  hasWon: boolean;
+  isGameOver: boolean;
 }
 
-function getCardClassName(hasWon: boolean, isActive: boolean, isGameOver: boolean): string {
-  const baseClasses = 'bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg p-4 lg:p-8 w-full max-w-sm lg:w-80 transition-all'
-  
+function getCardClassName(
+  hasWon: boolean,
+  isActive: boolean,
+  isGameOver: boolean
+): string {
+  const baseClasses =
+    "bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg p-4 lg:p-8 w-full max-w-sm lg:w-80 transition-all";
+
   if (hasWon) {
-    return `${baseClasses} ring-4 ring-green-400 shadow-green-400/50 shadow-2xl animate-pulse`
+    return `${baseClasses} ring-4 ring-green-400 shadow-green-400/50 shadow-2xl animate-pulse`;
   }
-  
+
   if (isActive && !isGameOver) {
-    return `${baseClasses} ring-2 ring-green-400`
+    return `${baseClasses} ring-2 ring-green-400`;
   }
-  
-  return baseClasses
+
+  return baseClasses;
 }
 
 const animationDelayStyles = {
-  delay200: { animationDelay: '0.2s' } as const,
-  delay400: { animationDelay: '0.4s' } as const
-}
+  delay200: { animationDelay: "0.2s" } as const,
+  delay400: { animationDelay: "0.4s" } as const,
+};
 
-export function PlayerCard({ player, pieces, icon, isActive, hasWon, isGameOver }: PlayerCardProps) {
+export function PlayerCard({
+  player,
+  pieces,
+  icon,
+  isActive,
+  hasWon,
+  isGameOver,
+}: PlayerCardProps) {
   return (
     <div className={getCardClassName(hasWon, isActive, isGameOver)}>
       <div className="text-center">
@@ -45,11 +57,17 @@ export function PlayerCard({ player, pieces, icon, isActive, hasWon, isGameOver 
         {isActive && !isGameOver && (
           <div className="flex justify-center space-x-1">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" style={animationDelayStyles.delay200}></div>
-            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" style={animationDelayStyles.delay400}></div>
+            <div
+              className="w-2 h-2 bg-green-400 rounded-full animate-pulse"
+              style={animationDelayStyles.delay200}
+            ></div>
+            <div
+              className="w-2 h-2 bg-green-400 rounded-full animate-pulse"
+              style={animationDelayStyles.delay400}
+            ></div>
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }

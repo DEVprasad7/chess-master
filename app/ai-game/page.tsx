@@ -1,112 +1,122 @@
-"use client"
+"use client";
 
-import { useState, useEffect, memo } from "react"
-import { ChessGame, useChessGameContext } from "@react-chess-tools/react-chess-game"
-import { HybridAI } from "@/utils/hybridAI"
+import { useState, useEffect, memo } from "react";
+import {
+  ChessGame,
+  useChessGameContext,
+} from "@react-chess-tools/react-chess-game";
+import { HybridAI } from "@/utils/hybridAI";
 
-const GameContent = memo(function GameContent({ isAIThinking }: { isAIThinking: boolean }) {
-  const { info } = useChessGameContext()
-  
+const GameContent = memo(function GameContent({
+  isAIThinking,
+}: {
+  isAIThinking: boolean;
+}) {
+  const { info } = useChessGameContext();
+
   // Only disable during AI turn, not during AI thinking after human move
-  const shouldDisable = info.turn === 'b' && !isAIThinking
-  
+  const shouldDisable = info.turn === "b" && !isAIThinking;
+
   return (
-    <div className={shouldDisable ? 'pointer-events-none' : ''}>
+    <div className={shouldDisable ? "pointer-events-none" : ""}>
       <ChessGame.Board />
     </div>
-  )
-})
+  );
+});
 
 function AIGameLayout() {
-  const { info, game, methods } = useChessGameContext()
-  const [isAIThinking, setIsAIThinking] = useState(false)
-  const [hybridAI] = useState(() => new HybridAI())
-  
+  const { info, game, methods } = useChessGameContext();
+  const [isAIThinking, setIsAIThinking] = useState(false);
+  const [hybridAI] = useState(() => new HybridAI());
+
   // Initialize AI mode
   useEffect(() => {
-    const mode = localStorage.getItem('aiMode')
-    if (mode === 'stockfish') {
-      hybridAI.setLocalEngineMode()
-    } else if (mode === 'custom') {
+    const mode = localStorage.getItem("aiMode");
+    if (mode === "stockfish") {
+      hybridAI.setLocalEngineMode();
+    } else if (mode === "custom") {
       try {
-        const config = JSON.parse(localStorage.getItem('aiConfig') || '{}')
-        hybridAI.setCustomAIMode(config)
+        const config = JSON.parse(localStorage.getItem("aiConfig") || "{}");
+        hybridAI.setCustomAIMode(config);
       } catch (error) {
-        console.error('Failed to parse AI config:', error)
-        hybridAI.setLocalEngineMode()
+        console.error("Failed to parse AI config:", error);
+        hybridAI.setLocalEngineMode();
       }
     }
-  }, [hybridAI])
+  }, [hybridAI]);
 
-  
-  const humanWon = info.isCheckmate && info.turn === 'b' // Human is white, AI is black
-  const aiWon = info.isCheckmate && info.turn === 'w'
-  
+  const humanWon = info.isCheckmate && info.turn === "b"; // Human is white, AI is black
+  const aiWon = info.isCheckmate && info.turn === "w";
+
   // Optimized AI move logic
   useEffect(() => {
-    if (info.turn !== 'b' || info.isGameOver || isAIThinking) return
-    
+    if (info.turn !== "b" || info.isGameOver || isAIThinking) return;
+
     const makeAIMove = async () => {
-      setIsAIThinking(true)
-      
+      setIsAIThinking(true);
+
       try {
-        const possibleMoves = game.moves()
+        const possibleMoves = game.moves();
         if (possibleMoves.length === 0) {
-          setIsAIThinking(false)
-          return
+          setIsAIThinking(false);
+          return;
         }
-        
+
         // Get AI move with shorter timeout
         const aiMove = await Promise.race([
           hybridAI.getBestMove(game.fen(), game.history(), possibleMoves, game),
-          new Promise(resolve => setTimeout(() => resolve(null), 3000)) // 3s timeout
-        ])
-        
+          new Promise((resolve) => setTimeout(() => resolve(null), 3000)), // 3s timeout
+        ]);
+
         // Quick move validation and execution
-        const moveToPlay = (aiMove && typeof aiMove === 'string' && possibleMoves.includes(aiMove.trim())) 
-          ? (aiMove as string).trim() 
-          : possibleMoves[Math.floor(Math.random() * possibleMoves.length)]
-        
+        const moveToPlay =
+          aiMove &&
+          typeof aiMove === "string" &&
+          possibleMoves.includes(aiMove.trim())
+            ? (aiMove as string).trim()
+            : possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+
         // Reduced delay for better responsiveness
         setTimeout(() => {
           try {
-            methods.makeMove(moveToPlay)
+            methods.makeMove(moveToPlay);
           } catch (error) {
-            console.error('Move failed:', error)
+            console.error("Move failed:", error);
             // Single fallback
             if (possibleMoves.length > 0) {
-              methods.makeMove(possibleMoves[0])
+              methods.makeMove(possibleMoves[0]);
             }
           }
-          setIsAIThinking(false)
-        }, 800) // Reduced from 1500ms to 800ms
-        
+          setIsAIThinking(false);
+        }, 800); // Reduced from 1500ms to 800ms
       } catch (error) {
-        console.error('AI error:', error)
+        console.error("AI error:", error);
         // Quick fallback
         setTimeout(() => {
           if (possibleMoves.length > 0) {
-            methods.makeMove(possibleMoves[0])
+            methods.makeMove(possibleMoves[0]);
           }
-          setIsAIThinking(false)
-        }, 500)
+          setIsAIThinking(false);
+        }, 500);
       }
-    }
-    
-    makeAIMove()
-  }, [info.turn, info.isGameOver, game, methods, isAIThinking])
-  
+    };
+
+    makeAIMove();
+  }, [info.turn, info.isGameOver, game, methods, isAIThinking]);
+
   return (
     <>
       <div className="flex items-center justify-center gap-8 mb-8">
         {/* Human Player (Left) */}
-        <div className={`bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg p-8 w-80 transition-all ${
-          humanWon 
-            ? 'ring-4 ring-green-400 shadow-green-400/50 shadow-2xl animate-pulse' 
-            : info.turn === 'w' && !info.isGameOver 
-            ? 'ring-2 ring-green-400' 
-            : ''
-        }`}>
+        <div
+          className={`bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg p-8 w-80 transition-all ${
+            humanWon
+              ? "ring-4 ring-green-400 shadow-green-400/50 shadow-2xl animate-pulse"
+              : info.turn === "w" && !info.isGameOver
+              ? "ring-2 ring-green-400"
+              : ""
+          }`}
+        >
           <div className="text-center">
             <div className="text-4xl mb-4">👤</div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
@@ -120,11 +130,17 @@ function AIGameLayout() {
                 You Won! 🏆
               </div>
             )}
-            {info.turn === 'w' && !info.isGameOver && (
+            {info.turn === "w" && !info.isGameOver && (
               <div className="flex justify-center space-x-1">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                <div
+                  className="w-2 h-2 bg-green-400 rounded-full animate-pulse"
+                  style={{ animationDelay: "0.2s" }}
+                ></div>
+                <div
+                  className="w-2 h-2 bg-green-400 rounded-full animate-pulse"
+                  style={{ animationDelay: "0.4s" }}
+                ></div>
               </div>
             )}
           </div>
@@ -136,13 +152,15 @@ function AIGameLayout() {
         </div>
 
         {/* AI Player (Right) */}
-        <div className={`bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg p-8 w-80 transition-all ${
-          aiWon 
-            ? 'ring-4 ring-red-400 shadow-red-400/50 shadow-2xl animate-pulse' 
-            : info.turn === 'b' && !info.isGameOver 
-            ? 'ring-2 ring-red-400' 
-            : ''
-        }`}>
+        <div
+          className={`bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg p-8 w-80 transition-all ${
+            aiWon
+              ? "ring-4 ring-red-400 shadow-red-400/50 shadow-2xl animate-pulse"
+              : info.turn === "b" && !info.isGameOver
+              ? "ring-2 ring-red-400"
+              : ""
+          }`}
+        >
           <div className="text-center">
             <div className="text-4xl mb-4">🤖</div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
@@ -157,43 +175,60 @@ function AIGameLayout() {
               </div>
             )}
             {(() => {
-              const isAIActive = (info.turn === 'b' || isAIThinking) && !info.isGameOver
-              return isAIActive && (
-                <>
-                  <div className="flex justify-center space-x-1">
-                    <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
-                    <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                    <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
-                  </div>
-                  <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                    AI is thinking...
-                  </div>
-                </>
-              )
+              const isAIActive =
+                (info.turn === "b" || isAIThinking) && !info.isGameOver;
+              return (
+                isAIActive && (
+                  <>
+                    <div className="flex justify-center space-x-1">
+                      <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                      <div
+                        className="w-2 h-2 bg-red-400 rounded-full animate-pulse"
+                        style={{ animationDelay: "0.2s" }}
+                      ></div>
+                      <div
+                        className="w-2 h-2 bg-red-400 rounded-full animate-pulse"
+                        style={{ animationDelay: "0.4s" }}
+                      ></div>
+                    </div>
+                    <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                      AI is thinking...
+                    </div>
+                  </>
+                )
+              );
             })()}
           </div>
         </div>
       </div>
-      
+
       {/* Game Status */}
-      {(info.isCheckmate || info.isStalemate || info.isDraw || info.isCheck) && (
+      {(info.isCheckmate ||
+        info.isStalemate ||
+        info.isDraw ||
+        info.isCheck) && (
         <div className="max-w-4xl mx-auto mb-4">
-          <div className={`rounded-lg p-4 text-center font-semibold ${
-            info.isCheckmate 
-              ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-              : info.isCheck
-              ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
-              : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
-          }`}>
-            {info.isCheckmate && `Checkmate! ${info.turn === 'w' ? 'AI' : 'Human'} wins!`}
-            {info.isStalemate && 'Stalemate! Game is a draw.'}
-            {info.isDraw && 'Draw!'}
-            {info.isCheck && !info.isCheckmate && `${info.turn === 'w' ? 'Human' : 'AI'} is in check!`}
+          <div
+            className={`rounded-lg p-4 text-center font-semibold ${
+              info.isCheckmate
+                ? "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200"
+                : info.isCheck
+                ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200"
+                : "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
+            }`}
+          >
+            {info.isCheckmate &&
+              `Checkmate! ${info.turn === "w" ? "AI" : "Human"} wins!`}
+            {info.isStalemate && "Stalemate! Game is a draw."}
+            {info.isDraw && "Draw!"}
+            {info.isCheck &&
+              !info.isCheckmate &&
+              `${info.turn === "w" ? "Human" : "AI"} is in check!`}
           </div>
-          
+
           {info.isGameOver && (
             <div className="text-center mt-4">
-              <button 
+              <button
                 onClick={() => window.location.reload()}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg hover:shadow-xl"
               >
@@ -203,16 +238,16 @@ function AIGameLayout() {
           )}
         </div>
       )}
-      
+
       <MoveHistory />
     </>
-  )
+  );
 }
 
 function MoveHistory() {
-  const { game } = useChessGameContext()
-  const moves = game.history()
-  
+  const { game } = useChessGameContext();
+  const moves = game.history();
+
   return (
     <div className="max-w-4xl mx-auto">
       <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg p-6">
@@ -227,16 +262,20 @@ function MoveHistory() {
           ) : (
             <div className="grid grid-cols-2 gap-2 text-sm">
               {moves.map((move, index) => (
-                <div key={index} className={`p-2 rounded ${
-                  index % 2 === 0 
-                    ? 'bg-green-100 dark:bg-green-900 text-green-900 dark:text-green-100' 
-                    : 'bg-red-100 dark:bg-red-900 text-red-900 dark:text-red-100'
-                }`}>
+                <div
+                  key={index}
+                  className={`p-2 rounded ${
+                    index % 2 === 0
+                      ? "bg-green-100 dark:bg-green-900 text-green-900 dark:text-green-100"
+                      : "bg-red-100 dark:bg-red-900 text-red-900 dark:text-red-100"
+                  }`}
+                >
                   <span className="font-mono">
-                    {Math.floor(index / 2) + 1}{index % 2 === 0 ? '.' : '...'} {move}
+                    {Math.floor(index / 2) + 1}
+                    {index % 2 === 0 ? "." : "..."} {move}
                   </span>
                   <span className="text-xs ml-2 opacity-70">
-                    {index % 2 === 0 ? '(Human)' : '(AI)'}
+                    {index % 2 === 0 ? "(Human)" : "(AI)"}
                   </span>
                 </div>
               ))}
@@ -245,15 +284,15 @@ function MoveHistory() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default function AIGamePage() {
-  const [mounted, setMounted] = useState(false)
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
@@ -266,7 +305,7 @@ export default function AIGamePage() {
             Challenge our AI opponent
           </p>
         </div>
-        
+
         {mounted ? (
           <ChessGame.Root>
             <AIGameLayout />
@@ -277,18 +316,28 @@ export default function AIGamePage() {
               <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg p-8 w-80">
                 <div className="text-center">
                   <div className="text-4xl mb-4">👤</div>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Human Player</h3>
-                  <p className="text-gray-600 dark:text-gray-300 opacity-70">White Pieces</p>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                    Human Player
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 opacity-70">
+                    White Pieces
+                  </p>
                 </div>
               </div>
               <div className="w-[400px] h-[400px] bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                <div className="text-gray-500 dark:text-gray-400">Loading...</div>
+                <div className="text-gray-500 dark:text-gray-400">
+                  Loading...
+                </div>
               </div>
               <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg p-8 w-80">
                 <div className="text-center">
                   <div className="text-4xl mb-4">🤖</div>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">AI Opponent</h3>
-                  <p className="text-gray-600 dark:text-gray-300 opacity-70">Black Pieces</p>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                    AI Opponent
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-300 opacity-70">
+                    Black Pieces
+                  </p>
                 </div>
               </div>
             </div>
@@ -296,5 +345,5 @@ export default function AIGamePage() {
         )}
       </div>
     </div>
-  )
+  );
 }
