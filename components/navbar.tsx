@@ -8,11 +8,9 @@ export function Navbar() {
         <div className="flex h-16 items-center justify-between">
           {/* Left side (logo/title) */}
           <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                ♔ ChessMaster
-              </h1>
-            </div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex-shrink-0">
+              ♔ ChessMaster
+            </h1>
           </div>
 
           {/* Right side (theme toggle + auth buttons) */}

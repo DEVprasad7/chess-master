@@ -1,24 +1,35 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { AISelectionModal } from "@/components/ai-selection-modal"
+import Link from "next/link"
 
 export default function Home() {
   const [showAIModal, setShowAIModal] = useState(false)
+  const router = useRouter()
 
   const handleAIGameClick = () => {
     setShowAIModal(true)
   }
 
   const handleStockfishSelect = () => {
-    localStorage.setItem('aiMode', 'stockfish')
-    window.location.href = '/ai-game'
+    try {
+      localStorage.setItem('aiMode', 'stockfish')
+      router.push('/ai-game')
+    } catch (error) {
+      console.error('Failed to save AI mode:', error)
+    }
   }
 
   const handleCustomAISelect = (config: {apiKey: string, modelName: string}) => {
-    localStorage.setItem('aiMode', 'custom')
-    localStorage.setItem('aiConfig', JSON.stringify(config))
-    window.location.href = '/ai-game'
+    try {
+      localStorage.setItem('aiMode', 'custom')
+      localStorage.setItem('aiConfig', JSON.stringify(config))
+      router.push('/ai-game')
+    } catch (error) {
+      console.error('Failed to save AI config:', error)
+    }
   }
 
   return (
@@ -44,9 +55,9 @@ export default function Home() {
               <p className="text-gray-600 dark:text-gray-300 mb-4">
                 Play against a friend locally
               </p>
-              <a href="/game" className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors text-center">
+              <Link href="/game" className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors text-center">
                 Start Game
-              </a>
+              </Link>
             </div>
           </div>
 

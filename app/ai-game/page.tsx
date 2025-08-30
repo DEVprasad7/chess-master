@@ -4,19 +4,14 @@ import { useState, useEffect, memo } from "react"
 import { ChessGame, useChessGameContext } from "@react-chess-tools/react-chess-game"
 import { HybridAI } from "@/utils/hybridAI"
 
-const hybridAI = new HybridAI()
-
 const GameContent = memo(function GameContent({ isAIThinking }: { isAIThinking: boolean }) {
   const { info } = useChessGameContext()
   
-  const isDisabled = info.turn === 'b' || isAIThinking || info.isGameOver
+  // Only disable during AI turn, not during AI thinking after human move
+  const shouldDisable = info.turn === 'b' && !isAIThinking
   
   return (
-    <div className={`transition-all duration-200 ${
-      isDisabled 
-        ? 'opacity-60 pointer-events-none' 
-        : 'opacity-100 pointer-events-auto'
-    }`}>
+    <div className={shouldDisable ? 'pointer-events-none' : ''}>
       <ChessGame.Board />
     </div>
   )
@@ -25,6 +20,23 @@ const GameContent = memo(function GameContent({ isAIThinking }: { isAIThinking: 
 function AIGameLayout() {
   const { info, game, methods } = useChessGameContext()
   const [isAIThinking, setIsAIThinking] = useState(false)
+  const [hybridAI] = useState(() => new HybridAI())
+  
+  // Initialize AI mode
+  useEffect(() => {
+    const mode = localStorage.getItem('aiMode')
+    if (mode === 'stockfish') {
+      hybridAI.setLocalEngineMode()
+    } else if (mode === 'custom') {
+      try {
+        const config = JSON.parse(localStorage.getItem('aiConfig') || '{}')
+        hybridAI.setCustomAIMode(config)
+      } catch (error) {
+        console.error('Failed to parse AI config:', error)
+        hybridAI.setLocalEngineMode()
+      }
+    }
+  }, [hybridAI])
 
   
   const humanWon = info.isCheckmate && info.turn === 'b' // Human is white, AI is black
@@ -62,8 +74,9 @@ function AIGameLayout() {
           } catch (error) {
             console.error('Move failed:', error)
             // Single fallback
-            const fallbackMove = possibleMoves[0]
-            methods.makeMove(fallbackMove)
+            if (possibleMoves.length > 0) {
+              methods.makeMove(possibleMoves[0])
+            }
           }
           setIsAIThinking(false)
         }, 800) // Reduced from 1500ms to 800ms
@@ -72,7 +85,6 @@ function AIGameLayout() {
         console.error('AI error:', error)
         // Quick fallback
         setTimeout(() => {
-          const possibleMoves = game.moves()
           if (possibleMoves.length > 0) {
             methods.makeMove(possibleMoves[0])
           }
@@ -144,18 +156,21 @@ function AIGameLayout() {
                 AI Wins! 🤖
               </div>
             )}
-            {(info.turn === 'b' || isAIThinking) && !info.isGameOver && (
-              <div className="flex justify-center space-x-1">
-                <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
-                <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
-              </div>
-            )}
-            {(info.turn === 'b' || isAIThinking) && !info.isGameOver && (
-              <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                AI is thinking...
-              </div>
-            )}
+            {(() => {
+              const isAIActive = (info.turn === 'b' || isAIThinking) && !info.isGameOver
+              return isAIActive && (
+                <>
+                  <div className="flex justify-center space-x-1">
+                    <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                    <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                    <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                  </div>
+                  <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    AI is thinking...
+                  </div>
+                </>
+              )
+            })()}
           </div>
         </div>
       </div>
@@ -238,15 +253,6 @@ export default function AIGamePage() {
 
   useEffect(() => {
     setMounted(true)
-    
-    // Initialize AI mode
-    const mode = localStorage.getItem('aiMode')
-    if (mode === 'stockfish') {
-      hybridAI.setStockfishMode()
-    } else if (mode === 'custom') {
-      const config = JSON.parse(localStorage.getItem('aiConfig') || '{}')
-      hybridAI.setCustomAIMode(config)
-    }
   }, [])
 
   return (

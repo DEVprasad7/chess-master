@@ -3,11 +3,23 @@ interface AIConfig {
   modelName: string
 }
 
+interface ChessGame {
+  board(): any[][]
+  isCheckmate(): boolean
+  turn(): string
+  moves(): string[]
+  move(move: string): any
+  undo(): any
+  isGameOver(): boolean
+  fen(): string
+  history(): string[]
+}
+
 // Lightweight Local Chess Engine
 class LocalChessEngine {
   private pieceValues = { 'p': 100, 'n': 320, 'b': 330, 'r': 500, 'q': 900, 'k': 20000 }
 
-  private evaluatePosition(game: any): number {
+  private evaluatePosition(game: ChessGame): number {
     let score = 0
     const board = game.board()
     
@@ -33,7 +45,7 @@ class LocalChessEngine {
     return score
   }
   
-  private minimax(game: any, depth: number, alpha: number, beta: number, maximizing: boolean): number {
+  private minimax(game: ChessGame, depth: number, alpha: number, beta: number, maximizing: boolean): number {
     if (depth === 0 || game.isGameOver()) {
       return this.evaluatePosition(game)
     }
@@ -65,7 +77,7 @@ class LocalChessEngine {
     }
   }
   
-  async getBestMove(game: any): Promise<string> {
+  async getBestMove(game: ChessGame): Promise<string> {
     const moves = game.moves()
     if (moves.length === 0) return ''
     
@@ -82,7 +94,7 @@ class LocalChessEngine {
     let bestMove = moves[0]
     let bestScore = -Infinity
     
-    // Use depth 3 for faster performance
+    // Use depth 2 for faster performance
     for (const move of moves) {
       game.move(move)
       const score = this.minimax(game, 2, -Infinity, Infinity, false)
@@ -114,7 +126,10 @@ class CustomAIEngine {
         })
       })
       
-      if (!response.ok) return null
+      if (!response.ok) {
+        console.warn(`Custom AI API error: ${response.status} ${response.statusText}`)
+        return null
+      }
       
       const data = await response.json()
       return data.move?.trim() || null
@@ -130,7 +145,7 @@ export class HybridAI {
   private customAI: CustomAIEngine | null = null
   private useCustomAI = false
 
-  setStockfishMode() {
+  setLocalEngineMode() {
     this.useCustomAI = false
   }
 
@@ -139,12 +154,12 @@ export class HybridAI {
     this.customAI = new CustomAIEngine(config)
   }
 
-  async getBestMove(fen: string, moveHistory: string[], legalMoves: string[], game?: any): Promise<string | null> {
+  async getBestMove(fen: string, moveHistory: string[], legalMoves: string[], game?: ChessGame): Promise<string | null> {
     try {
       if (this.useCustomAI && this.customAI) {
         const move = await this.customAI.getBestMove(fen, moveHistory, legalMoves)
         if (move && legalMoves.includes(move.trim())) {
-          return move.trim()
+          return move
         }
       }
       

@@ -21,7 +21,14 @@ export async function getAIMove(fen: string, moveHistory: string[], legalMoves: 
       throw new Error(`API error: ${response.status}`)
     }
     
-    const data = await response.json()
+    let data
+    try {
+      data = await response.json()
+    } catch (jsonError) {
+      console.error('JSON parsing error:', jsonError)
+      return null
+    }
+    
     return data.move?.trim() || null
   } catch (error) {
     console.error('Error getting AI move:', error)
