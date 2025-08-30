@@ -43,7 +43,7 @@ function AIGameLayout() {
         hybridAI.setLocalEngineMode();
       }
     }
-  }, [hybridAI]);
+  }, []);
 
   const humanWon = info.isCheckmate && info.turn === "b"; // Human is white, AI is black
   const aiWon = info.isCheckmate && info.turn === "w";
@@ -93,8 +93,9 @@ function AIGameLayout() {
         console.error("AI error:", error);
         // Quick fallback
         setTimeout(() => {
-          if (possibleMoves.length > 0) {
-            methods.makeMove(possibleMoves[0]);
+          const fallbackMoves = game.moves();
+          if (fallbackMoves.length > 0) {
+            methods.makeMove(fallbackMoves[0]);
           }
           setIsAIThinking(false);
         }, 500);
