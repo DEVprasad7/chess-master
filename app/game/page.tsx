@@ -18,7 +18,7 @@ function GameLayout() {
   const blackWon = info.isCheckmate && info.turn === "w";
 
   const resetGame = () => {
-    methods.reset();
+    window.location.reload();
   };
 
   return (
