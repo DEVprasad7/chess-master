@@ -48,11 +48,14 @@ function AIGameLayout() {
   const humanWon = info.isCheckmate && info.turn === "b"; // Human is white, AI is black
   const aiWon = info.isCheckmate && info.turn === "w";
 
-  // Optimized AI move logic
+  // Optimized AI move logic with proper timing
   useEffect(() => {
     if (info.turn !== "b" || info.isGameOver || isAIThinking) return;
 
     const makeAIMove = async () => {
+      // Wait for human move animation to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       setIsAIThinking(true);
 
       try {
@@ -62,13 +65,13 @@ function AIGameLayout() {
           return;
         }
 
-        // Get AI move with shorter timeout
+        // Get AI move with timeout
         const aiMove = await Promise.race([
           hybridAI.getBestMove(game.fen(), game.history(), possibleMoves, game),
-          new Promise((resolve) => setTimeout(() => resolve(null), 3000)), // 3s timeout
+          new Promise((resolve) => setTimeout(() => resolve(null), 3000)),
         ]);
 
-        // Quick move validation and execution
+        // Move validation and execution
         const moveToPlay =
           aiMove &&
           typeof aiMove === "string" &&
@@ -76,29 +79,27 @@ function AIGameLayout() {
             ? (aiMove as string).trim()
             : possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
 
-        // Reduced delay for better responsiveness
+        // Execute AI move
         setTimeout(() => {
           try {
             methods.makeMove(moveToPlay);
           } catch (error) {
             console.error("Move failed:", error);
-            // Single fallback
             if (possibleMoves.length > 0) {
               methods.makeMove(possibleMoves[0]);
             }
           }
           setIsAIThinking(false);
-        }, 800); // Reduced from 1500ms to 800ms
+        }, 300);
       } catch (error) {
         console.error("AI error:", error);
-        // Quick fallback
         setTimeout(() => {
           const fallbackMoves = game.moves();
           if (fallbackMoves.length > 0) {
             methods.makeMove(fallbackMoves[0]);
           }
           setIsAIThinking(false);
-        }, 500);
+        }, 300);
       }
     };
 
