@@ -17,10 +17,10 @@ interface ChessGame {
 
 // Enhanced Local Chess Engine with Bot614 optimizations
 class LocalChessEngine {
-  private pieceValues = { p: 100, n: 330, b: 330, r: 500, q: 900, k: 20000 };
+  private pieceValues = { p: 100, n: 330, b: 400, r: 500, q: 900, k: 20000 };
   private transpositionTable = new Map<string, { score: number, depth: number, bestMove: string }>();
   private historyTable = new Map<string, number>();
-  private maxTableSize = 50000;
+  private maxTableSize = 70000;
 
   private evaluatePosition(game: ChessGame): number {
     let score = 0;
@@ -106,9 +106,9 @@ class LocalChessEngine {
 
   private updateTranspositionTable(fen: string, score: number, depth: number, bestMove: string): void {
     if (this.transpositionTable.size >= this.maxTableSize) {
-      // Simple cleanup: remove 25% of entries
+      // Simple cleanup: remove 15% of entries
       const entries = Array.from(this.transpositionTable.entries());
-      entries.slice(0, Math.floor(entries.length * 0.10)).forEach(([key]) => {
+      entries.slice(0, Math.floor(entries.length * 0.15)).forEach(([key]) => {
         this.transpositionTable.delete(key);
       });
     }
@@ -142,7 +142,7 @@ class LocalChessEngine {
     
     // Iterative deepening search
     let bestMove = moves[0];
-    const maxDepth = 6;
+    const maxDepth = 7;
     const startTime = Date.now();
     const maxTime = 3000;
     
