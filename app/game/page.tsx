@@ -12,7 +12,7 @@ function GameContent() {
 }
 
 function GameLayout() {
-  const { info, methods } = useChessGameContext();
+  const { info} = useChessGameContext();
 
   const whiteWon = info.isCheckmate && info.turn === "b";
   const blackWon = info.isCheckmate && info.turn === "w";

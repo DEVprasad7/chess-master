@@ -43,7 +43,7 @@ function AIGameLayout() {
         hybridAI.setLocalEngineMode();
       }
     }
-  }, []);
+  }, [hybridAI]);
 
   const humanWon = info.isCheckmate && info.turn === "b"; // Human is white, AI is black
   const aiWon = info.isCheckmate && info.turn === "w";
@@ -104,7 +104,7 @@ function AIGameLayout() {
     };
 
     makeAIMove();
-  }, [info.turn, info.isGameOver, game, methods, isAIThinking]);
+  }, [hybridAI,info.turn, info.isGameOver, game, methods, isAIThinking]);
 
   return (
     <>
