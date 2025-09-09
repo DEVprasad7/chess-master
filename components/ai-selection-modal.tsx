@@ -39,7 +39,7 @@ export function AISelectionModal({ isOpen, onClose, onSelectStockfish, onSelectC
                 onClick={onSelectStockfish}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg transition-colors"
               >
-                🏆 Play Against Local AI
+                🏆 Play Against Stockfish
                 <div className="text-sm opacity-80">Powerful chess engine (with fallback)</div>
               </button>
               <button

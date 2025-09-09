@@ -33,14 +33,14 @@ function AIGameLayout() {
   useEffect(() => {
     const mode = localStorage.getItem("aiMode");
     if (mode === "stockfish") {
-      hybridAI.setLocalEngineMode();
+      hybridAI.setStockfishMode();
     } else if (mode === "custom") {
       try {
         const config = JSON.parse(localStorage.getItem("aiConfig") || "{}");
         hybridAI.setCustomAIMode(config);
       } catch (error) {
         console.error("Failed to parse AI config:", error);
-        hybridAI.setLocalEngineMode();
+        hybridAI.setStockfishMode();
       }
     }
   }, [hybridAI]);
@@ -108,10 +108,10 @@ function AIGameLayout() {
 
   return (
     <>
-      <div className="flex items-center justify-center gap-8 mb-8">
+      <div className="flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-8 mb-8">
         {/* Human Player (Left) */}
         <div
-          className={`bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg p-8 w-80 transition-all ${
+          className={`bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg p-4 lg:p-8 w-full max-w-sm lg:w-80 transition-all ${
             humanWon
               ? "ring-4 ring-green-400 shadow-green-400/50 shadow-2xl animate-pulse"
               : info.turn === "w" && !info.isGameOver
@@ -120,15 +120,15 @@ function AIGameLayout() {
           }`}
         >
           <div className="text-center">
-            <div className="text-4xl mb-4">👤</div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+            <div className="text-2xl lg:text-4xl mb-2 lg:mb-4">👤</div>
+            <h3 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white mb-2 lg:mb-3">
               Human Player
             </h3>
-            <p className="text-gray-600 dark:text-gray-300 opacity-70 mb-2">
+            <p className="text-sm lg:text-base text-gray-600 dark:text-gray-300 opacity-70 mb-2">
               White Pieces
             </p>
             {humanWon && (
-              <div className="text-green-500 font-bold text-lg animate-bounce">
+              <div className="text-green-500 font-bold text-base lg:text-lg animate-bounce">
                 You Won! 🏆
               </div>
             )}
@@ -149,13 +149,13 @@ function AIGameLayout() {
         </div>
 
         {/* Chess Game (Middle) */}
-        <div className="w-[400px] h-[400px] flex-shrink-0">
+        <div className="w-full max-w-[300px] sm:max-w-[350px] lg:max-w-[400px] aspect-square">
           <GameContent isAIThinking={isAIThinking} />
         </div>
 
         {/* AI Player (Right) */}
         <div
-          className={`bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg p-8 w-80 transition-all ${
+          className={`bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg p-4 lg:p-8 w-full max-w-sm lg:w-80 transition-all ${
             aiWon
               ? "ring-4 ring-red-400 shadow-red-400/50 shadow-2xl animate-pulse"
               : info.turn === "b" && !info.isGameOver
@@ -164,15 +164,15 @@ function AIGameLayout() {
           }`}
         >
           <div className="text-center">
-            <div className="text-4xl mb-4">🤖</div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+            <div className="text-2xl lg:text-4xl mb-2 lg:mb-4">🤖</div>
+            <h3 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white mb-2 lg:mb-3">
               AI Opponent
             </h3>
-            <p className="text-gray-600 dark:text-gray-300 opacity-70 mb-2">
+            <p className="text-sm lg:text-base text-gray-600 dark:text-gray-300 opacity-70 mb-2">
               Black Pieces
             </p>
             {aiWon && (
-              <div className="text-red-500 font-bold text-lg animate-bounce">
+              <div className="text-red-500 font-bold text-base lg:text-lg animate-bounce">
                 AI Wins! 🤖
               </div>
             )}
@@ -314,30 +314,30 @@ export default function AIGamePage() {
           </ChessGame.Root>
         ) : (
           <>
-            <div className="flex items-center justify-center gap-8 mb-8">
-              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg p-8 w-80">
+            <div className="flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-8 mb-8">
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg p-4 lg:p-8 w-full max-w-sm lg:w-80">
                 <div className="text-center">
-                  <div className="text-4xl mb-4">👤</div>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                  <div className="text-2xl lg:text-4xl mb-2 lg:mb-4">👤</div>
+                  <h3 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white mb-2 lg:mb-3">
                     Human Player
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-300 opacity-70">
+                  <p className="text-sm lg:text-base text-gray-600 dark:text-gray-300 opacity-70">
                     White Pieces
                   </p>
                 </div>
               </div>
-              <div className="w-[400px] h-[400px] bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+              <div className="w-full max-w-[300px] sm:max-w-[350px] lg:max-w-[400px] aspect-square bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
                 <div className="text-gray-500 dark:text-gray-400">
                   Loading...
                 </div>
               </div>
-              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg p-8 w-80">
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg p-4 lg:p-8 w-full max-w-sm lg:w-80">
                 <div className="text-center">
-                  <div className="text-4xl mb-4">🤖</div>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                  <div className="text-2xl lg:text-4xl mb-2 lg:mb-4">🤖</div>
+                  <h3 className="text-lg lg:text-xl font-semibold text-gray-900 dark:text-white mb-2 lg:mb-3">
                     AI Opponent
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-300 opacity-70">
+                  <p className="text-sm lg:text-base text-gray-600 dark:text-gray-300 opacity-70">
                     Black Pieces
                   </p>
                 </div>
