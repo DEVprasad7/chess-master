@@ -106,33 +106,21 @@ class CustomAIEngine {
 
   async getBestMove(
     fen: string,
-    moveHistory: string[],
     legalMoves: string[]
-  ): Promise<string | null> {
+  ): Promise<{ move: string | null; isLimitReached?: boolean; error?: string }> {
     try {
-      const response = await fetch("/api/custom-ai-move", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fen,
-          moveHistory,
-          legalMoves,
-          config: this.config,
-        }),
-      });
-
-      if (!response.ok) {
-        console.warn(
-          `Custom AI API error: ${response.status} ${response.statusText}`
-        );
-        return null;
-      }
-
-      const data = await response.json();
-      return data.move?.trim() || null;
+      const { getCustomAIMove } = await import('./aiMoves');
+      const result = await getCustomAIMove(this.config, fen, legalMoves);
+      console.log("Custom AI move:", result.move);
+      
+      return {
+        move: result.move,
+        isLimitReached: result.isLimitReached,
+        error: result.error
+      };
     } catch (error) {
       console.error("Custom AI error:", error);
-      return null;
+      return { move: null, error: (error as Error).message };
     }
   }
 }
@@ -153,34 +141,39 @@ export class HybridAI {
 
   async getBestMove(
     fen: string,
-    moveHistory: string[],
     legalMoves: string[],
     game?: ChessGame
-  ): Promise<string | null> {
+  ): Promise<{ move: string | null; isLimitReached?: boolean; shouldFallback?: boolean }> {
     try {
       if (this.useCustomAI && this.customAI) {
-        const move = await this.customAI.getBestMove(
+        const result = await this.customAI.getBestMove(
           fen,
-          moveHistory,
           legalMoves
         );
-        if (move && legalMoves.includes(move.trim())) {
-          return move;
+        
+        if (result.isLimitReached) {
+          return { move: null, isLimitReached: true, shouldFallback: true };
+        }
+        
+        if (result.move && legalMoves.includes(result.move.trim())) {
+          return { move: result.move };
         }
       }
 
       // Use Stockfish engine (default)
       if (game) {
-        return await this.stockfishEngine.getBestMove(game);
+        const move = await this.stockfishEngine.getBestMove(game);
+        return { move };
       }
     } catch (error) {
       console.error("AI engine error:", error);
       // Fallback to Stockfish engine
       if (game) {
-        return await this.stockfishEngine.getBestMove(game);
+        const move = await this.stockfishEngine.getBestMove(game);
+        return { move };
       }
     }
-    return null;
+    return { move: null };
   }
 
   destroy() {

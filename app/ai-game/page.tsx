@@ -27,6 +27,7 @@ const GameContent = memo(function GameContent({
 function AIGameLayout() {
   const { info, game, methods } = useChessGameContext();
   const [isAIThinking, setIsAIThinking] = useState(false);
+  const [showLimitDialog, setShowLimitDialog] = useState(false);
   const [hybridAI] = useState(() => new HybridAI());
 
   // Initialize AI mode
@@ -66,17 +67,24 @@ function AIGameLayout() {
         }
 
         // Get AI move with timeout
-        const aiMove = await Promise.race([
-          hybridAI.getBestMove(game.fen(), game.history(), possibleMoves, game),
-          new Promise((resolve) => setTimeout(() => resolve(null), 3000)),
-        ]);
+        const aiResult = await Promise.race([
+          hybridAI.getBestMove(game.fen(), possibleMoves, game),
+          new Promise((resolve) => setTimeout(() => resolve({ move: null }), 3000)),
+        ]) as { move: string | null; isLimitReached?: boolean; shouldFallback?: boolean };
+
+        // Handle API limit reached
+        if (aiResult.isLimitReached) {
+          setIsAIThinking(false);
+          setShowLimitDialog(true);
+          return;
+        }
 
         // Move validation and execution
         const moveToPlay =
-          aiMove &&
-          typeof aiMove === "string" &&
-          possibleMoves.includes(aiMove.trim())
-            ? (aiMove as string).trim()
+          aiResult.move &&
+          typeof aiResult.move === "string" &&
+          possibleMoves.includes(aiResult.move.trim())
+            ? aiResult.move.trim()
             : possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
 
         // Execute AI move
@@ -104,7 +112,7 @@ function AIGameLayout() {
     };
 
     makeAIMove();
-  }, [hybridAI,info.turn, info.isGameOver, game, methods, isAIThinking]);
+  }, [hybridAI, info.turn, info.isGameOver, game, methods, isAIThinking, showLimitDialog]);
 
   return (
     <>
@@ -242,6 +250,35 @@ function AIGameLayout() {
       )}
 
       <MoveHistory />
+      
+      {/* API Limit Dialog */}
+      {showLimitDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md mx-4">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">API Limit Reached</h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">Your API key has reached its limit. Choose how to continue:</p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => {
+                  setShowLimitDialog(false);
+                  hybridAI.setStockfishMode();
+                  // Trigger AI move again with Stockfish
+                  setTimeout(() => setIsAIThinking(false), 100);
+                }}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg transition-colors"
+              >
+                Continue with Stockfish
+              </button>
+              <button 
+                onClick={() => window.location.href = '/'}
+                className="flex-1 bg-gray-600 hover:bg-gray-700 text-white p-3 rounded-lg transition-colors"
+              >
+                Go Back
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
