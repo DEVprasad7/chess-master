@@ -84,7 +84,7 @@ class LocalChessEngine {
 
   // Transposition table keyed by zobrist (stringified BigInt), store bestMove for PV, score, depth, and node type.
   private transpositionTable = new Map<string, { score: number; depth: number; bestMove: string; flag: "EXACT" | "LOWER" | "UPPER" }>();
-  private maxTableSize = 70000;
+  private maxTableSize = 80000;
 
   // History and killer tables
   private historyTable = new Map<string, number>();
@@ -97,12 +97,12 @@ class LocalChessEngine {
 
   // Search control
   private startTime = 0;
-  private maxTimeMs = 5000; // 5 seconds default; change if needed
+  private maxTimeMs = 6000; // 6 seconds default; change if needed
   private nodesSearched = 0;
   private stopSearch = false;
-  private maxDepthLimit = 20;
+  private maxDepthLimit = 16;
 
-  constructor(maxTimeMs = 5000) {
+  constructor(maxTimeMs = 6000) {
     this.maxTimeMs = maxTimeMs;
     this.initZobrist();
   }
