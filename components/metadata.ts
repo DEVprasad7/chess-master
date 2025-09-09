@@ -20,7 +20,7 @@ export function useApiKeyMetadata() {
 
   const getApiKeys = (): ApiKey[] => {
     if (!user) return [];
-    const storedKeys = (user.unsafeMetadata?.apiKeys as any[]) || [];
+    const storedKeys = (user.unsafeMetadata?.apiKeys as ApiKey[]) || [];
     
     return storedKeys;
   };

@@ -2,12 +2,25 @@
 
 import { useState, FC } from 'react';
 
+interface ApiModel {
+  id: string;
+  name: string;
+  modelId: string;
+}
+
+interface ApiResponse {
+  data?: ApiModel[];
+  models?: ApiModel[];
+  error?: { message: string };
+  [key: string]: unknown;
+}
+
 // Define the structure for each provider's configuration
 export interface ProviderConfig {
   name: string;
   apiUrl: string;
   getHeaders: (apiKey: string) => HeadersInit;
-  parseModels: (data: any) => string[];
+  parseModels: (data: ApiResponse) => string[];
 }
 
 // Configuration object for all supported AI providers
@@ -16,13 +29,13 @@ export const providers: Record<string, ProviderConfig> = {
     name: "OpenAI",
     apiUrl: "https://api.openai.com/v1/models",
     getHeaders: (apiKey) => ({ "Authorization": `Bearer ${apiKey}` }),
-    parseModels: (data) => data.data.map((model: any) => model.id).sort(),
+    parseModels: (data) => data.data?.map((model) => model.id).sort() || [],
   },
   "google-gemini": {
     name: "Google Gemini",
     apiUrl: "https://generativelanguage.googleapis.com/v1beta/models",
     getHeaders: (apiKey) => ({ "x-goog-api-key": apiKey }),
-    parseModels: (data) => data.models.map((model: any) => model.name.replace('models/', '')).sort(),
+    parseModels: (data) => data.models?.map((model) => model.name.replace('models/', '')).sort() || [],
   },
   anthropic: {
     name: "Anthropic (Claude)",
@@ -45,19 +58,19 @@ export const providers: Record<string, ProviderConfig> = {
     name: "Deepseek",
     apiUrl: "https://api.deepseek.com/v1/models",
     getHeaders: (apiKey) => ({ "Authorization": `Bearer ${apiKey}` }),
-    parseModels: (data) => data.data.map((model: any) => model.id).sort(),
+    parseModels: (data) => data.data?.map((model) => model.id).sort() || [],
   },
   openrouter: {
     name: "OpenRouter",
     apiUrl: "https://openrouter.ai/api/v1/models",
     getHeaders: (apiKey) => ({ "Authorization": `Bearer ${apiKey}` }),
-    parseModels: (data) => data.data.map((model: any) => model.id).sort(),
+    parseModels: (data) => data.data?.map((model) => model.id).sort() || [],
   },
   "hugging-face": {
       name: "Hugging Face",
       apiUrl: "https://api-inference.huggingface.co/models",
       getHeaders: (apiKey) => ({ "Authorization": `Bearer ${apiKey}` }),
-      parseModels: (data) => data.map((model: any) => model.modelId).sort().slice(0, 50),
+      parseModels: (data) => (Array.isArray(data) ? data.map((model) => model.modelId).sort().slice(0, 50) : []),
   }
 };
 
@@ -104,8 +117,9 @@ export async function verifyApiKey(provider: string, apiKey: string): Promise<{ 
     const parsedModels = selectedProvider.parseModels(data);
     return { success: true, models: parsedModels };
 
-  } catch (err: any) {
-    return { success: false, error: err.message || "Invalid API key" };
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : "Invalid API key";
+    return { success: false, error: errorMessage };
   }
 }
 
