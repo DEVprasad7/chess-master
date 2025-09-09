@@ -100,7 +100,7 @@ class LocalChessEngine {
   private maxTimeMs = 6000; // 6 seconds default; change if needed
   private nodesSearched = 0;
   private stopSearch = false;
-  private maxDepthLimit = 16;
+  private maxDepthLimit = 45;
 
   constructor(maxTimeMs = 6000) {
     this.maxTimeMs = maxTimeMs;
