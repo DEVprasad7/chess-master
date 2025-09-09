@@ -33,7 +33,7 @@ function GameLayout() {
           isGameOver={info.isGameOver}
         />
 
-        <div className="w-full max-w-[300px] sm:max-w-[350px] lg:max-w-[400px] aspect-square">
+        <div className="w-full max-w-[350px] sm:max-w-[400px] lg:max-w-[400px] aspect-square">
           <GameContent />
         </div>
 
