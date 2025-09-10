@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useApiKeyMetadata } from "@/components/metadata";
 import { providers, verifyApiKey } from "@/components/api-key_verify";
 import { Trash2 } from "lucide-react";
+import { ApiKey } from "@/utils/types";
 
 export default function ModelsPage() {
   const { apiKeys, isLoaded, deleteApiKey, updateApiKey } = useApiKeyMetadata();
@@ -20,7 +22,7 @@ export default function ModelsPage() {
     }
   };
 
-  const handleEdit = async (apiKey: any) => {
+  const handleEdit = async (apiKey: ApiKey) => {
     setEditingId(apiKey.id);
     setSelectedModel(apiKey.model);
     setIsLoading(true);
@@ -87,12 +89,12 @@ export default function ModelsPage() {
             <p className="text-gray-600 dark:text-gray-300 mb-6">
               Start by configuring your first AI model to play chess
             </p>
-            <a
+            <Link
               href="/"
               className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
             >
               Configure AI Model
-            </a>
+            </Link>
           </div>
         ) : (
           <div className="max-w-4xl mx-auto">
