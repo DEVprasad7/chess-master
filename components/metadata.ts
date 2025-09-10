@@ -31,7 +31,7 @@ export function useApiKeyMetadata() {
     await saveApiKeys(updatedKeys);
   };
 
-  const updateApiKey = async (id: string, updatedApiKey: Omit<ApiKey, 'id' | 'createdAt'>) => {
+  const updateApiKey = async (id: string, updatedApiKey: Omit<ApiKey, 'id'>) => {
     const existingKeys = getApiKeys();
     const updatedKeys = existingKeys.map(key => 
       key.id === id ? { ...key, ...updatedApiKey } : key
