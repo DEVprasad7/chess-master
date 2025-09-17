@@ -1,15 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { useApiKeyMetadata } from "@/components/metadata";
-import { providers } from "@/components/api-key_verify";
+import { useApiKeyMetadata } from "@/components/metadata"
 import { AIvsAIGame } from "@/components/ai-vs-ai-game";
+
+interface CustomAIConfiguration {
+  apiKey: string;
+  model: string;
+  provider: string;
+}
 
 interface AIOption {
   id: string;
   name: string;
   type: 'stockfish' | 'custom';
-  config?: any;
+  config?: CustomAIConfiguration;
 }
 
 export default function AIvsAIPage() {
