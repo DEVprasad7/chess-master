@@ -1,6 +1,7 @@
 interface AIConfig {
   apiKey: string;
   modelName: string;
+  providerName?: string;
 }
 
 interface ChessGame {
@@ -126,12 +127,19 @@ class CustomAIEngine {
 }
 
 export class HybridAI {
-  private stockfishEngine = new StockfishEngine();
+  private stockfishEngine: StockfishEngine;
   private customAI: CustomAIEngine | null = null;
   private useCustomAI = false;
 
-  setStockfishMode() {
+  constructor() {
+    this.stockfishEngine = new StockfishEngine();
+  }
+
+  setStockfishMode(depth?: number, timeLimit?: number) {
     this.useCustomAI = false;
+    if (depth !== undefined || timeLimit !== undefined) {
+      this.stockfishEngine = new StockfishEngine(depth, timeLimit);
+    }
   }
 
   setCustomAIMode(config: AIConfig) {
@@ -151,13 +159,23 @@ export class HybridAI {
           legalMoves
         );
         
+        // Always check for API limit first
         if (result.isLimitReached) {
-          return { move: null, isLimitReached: true, shouldFallback: true };
+          return { move: null, isLimitReached: true };
         }
         
-        if (result.move && legalMoves.includes(result.move.trim())) {
+        // If no move returned but no limit reached, it's an error
+        if (!result.move) {
+          return { move: null, isLimitReached: false };
+        }
+        
+        // Validate the move
+        if (legalMoves.includes(result.move.trim())) {
           return { move: result.move };
         }
+        
+        // Invalid move returned
+        return { move: null, isLimitReached: false };
       }
 
       // Use Stockfish engine (default)
@@ -167,11 +185,7 @@ export class HybridAI {
       }
     } catch (error) {
       console.error("AI engine error:", error);
-      // Fallback to Stockfish engine
-      if (game) {
-        const move = await this.stockfishEngine.getBestMove(game);
-        return { move };
-      }
+      return { move: null, isLimitReached: false };
     }
     return { move: null };
   }
