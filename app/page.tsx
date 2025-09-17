@@ -73,7 +73,7 @@ export default function Home() {
               </p>
               <button 
                 onClick={handleAIGameClick}
-                className="block w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors text-center"
+                className="cursor-pointer block w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md transition-colors text-center"
               >
                 Challenge AI
               </button>
@@ -89,7 +89,7 @@ export default function Home() {
               <p className="text-gray-600 dark:text-gray-300 mb-4">
                 Watch AI battle it out
               </p>
-              <Link href="/ai-vs-ai" className="block w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors text-center">
+              <Link href="/ai-vs-ai" className="cursor-pointer block w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors text-center">
                 Start Battle
               </Link>
             </div>
