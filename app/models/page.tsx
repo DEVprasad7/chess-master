@@ -166,7 +166,7 @@ export default function ModelsPage() {
               {apiKeys.map((apiKey) => (
                 <div
                   key={apiKey.id}
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700"
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3 border border-gray-200 dark:border-gray-700"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
